@@ -7,6 +7,20 @@ export default function StaffDashboard() {
   const role = userProfile?.role; // "receptionist" | "housekeeping"
   const hotelId = userProfile?.hotelId;
 
+  const roomOpsPath =
+    role === "receptionist"
+      ? "/staff/reception/dashboard"
+      : role === "housekeeping"
+      ? "/staff/housekeeping/dashboard"
+      : "/staff/dashboard";
+
+  const roomOpsLabel =
+    role === "receptionist"
+      ? "Reception Operations"
+      : role === "housekeeping"
+      ? "Housekeeping Operations"
+      : "Room Operations";
+
   return (
     <div className="pt-24 pb-16">
       <div className="container-x">
@@ -20,19 +34,23 @@ export default function StaffDashboard() {
           </h1>
 
           <p className="mt-3 text-white/70">
-            View and manage service requests assigned to your role in real time.
+            Manage service requests and hotel operations within your assigned hotel.
           </p>
 
           {!hotelId && (
             <div className="mt-6 rounded-xl border border-red-500/30 bg-red-500/10 p-4 text-sm text-red-200">
               This staff account does not have a <span className="text-white">hotelId</span>.
               <br />
-              Set it in Firestore: <span className="text-white">users/{userProfile?.uid || "uid"}</span>{" "}
+              Set it in Firestore:{" "}
+              <span className="text-white">
+                users/{userProfile?.uid || "uid"}
+              </span>{" "}
               → <span className="text-white">hotelId</span>.
             </div>
           )}
 
           <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* Service Requests */}
             <Link
               className="card-luxe p-6 hover:border-gold/40 transition"
               to="/staff/requests"
@@ -42,28 +60,52 @@ export default function StaffDashboard() {
               </p>
               <p className="mt-2 font-heading text-xl">Assigned Queue</p>
               <p className="mt-2 text-sm text-white/70">
-                See NEW requests first, then IN_PROGRESS, then DONE.
+                Handle guest requests. NEW → IN_PROGRESS → DONE.
               </p>
               <p className="mt-3 text-xs text-white/50">
-                Filtered by: role + hotel
+                Filtered by: role + hotel (in logic)
               </p>
             </Link>
 
-            <div className="card-luxe p-6 border border-white/10">
+            {/* Room Operations */}
+            <Link
+              className={
+                "card-luxe p-6 border border-white/10 transition " +
+                (hotelId ? "hover:border-gold/40" : "opacity-60 pointer-events-none")
+              }
+              to={roomOpsPath}
+              aria-disabled={!hotelId}
+            >
               <p className="text-xs uppercase tracking-[0.25em] text-white/60">
-                Coming Next
+                Operations
               </p>
-              <p className="mt-2 font-heading text-xl">Room Operations</p>
+              <p className="mt-2 font-heading text-xl">{roomOpsLabel}</p>
               <p className="mt-2 text-sm text-white/70">
-                Room status (CLEAN/DIRTY/MAINTENANCE) and staff task assignment.
+                {role === "receptionist"
+                  ? "Allocate rooms, then manage check-in and check-out."
+                  : role === "housekeeping"
+                  ? "Update room status: DIRTY / CLEAN / MAINTENANCE."
+                  : "Room allocation and room status management."}
               </p>
-            </div>
+              <p className="mt-3 text-xs text-white/50">
+                Scoped to your hotelId
+              </p>
+            </Link>
           </div>
 
           <div className="mt-8 flex flex-col sm:flex-row gap-3">
             <Link className="gold-solid-btn w-full sm:w-auto" to="/staff/requests">
               Open Requests
             </Link>
+
+            <Link
+              className={"gold-outline-btn w-full sm:w-auto " + (!hotelId ? "opacity-60 pointer-events-none" : "")}
+              to={roomOpsPath}
+              aria-disabled={!hotelId}
+            >
+              Open Room Ops
+            </Link>
+
             <Link className="gold-outline-btn w-full sm:w-auto" to="/staff/dashboard">
               Refresh Dashboard
             </Link>

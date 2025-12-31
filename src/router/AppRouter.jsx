@@ -13,6 +13,15 @@ import MyBookings from "../pages/MyBookings";
 import Notifications from "../pages/Notifications";
 import GuestRequests from "../pages/GuestRequests";
 import StaffRequests from "../pages/StaffRequests";
+import ReceptionDashboard from "../pages/ReceptionDashboard";
+import HousekeepingDashboard from "../pages/HousekeepingDashboard";
+import SeedPhase7 from "../pages/SeedPhase7";
+import AdminHome from "../pages/admin/AdminHome";
+import AdminUsers from "../pages/admin/AdminUsers";
+import AdminHotels from "../pages/admin/AdminHotels";
+import AdminAuditLogs from "../pages/admin/AdminAuditLogs";
+
+
 
 
 
@@ -25,6 +34,7 @@ export default function AppRouter() {
       <Route path="/rooms/:id" element={<RoomDetails />} />
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
+        <Route path="/seed-phase7" element={<SeedPhase7 />} />
 
       {/* Protected dashboards */}
       <Route
@@ -51,6 +61,42 @@ export default function AppRouter() {
     </ProtectedRoute>
   }
 />
+<Route
+  path="/admin/dashboard"
+  element={
+    <ProtectedRoute allowedRoles={["admin"]}>
+      <AdminHome />
+    </ProtectedRoute>
+  }
+/>
+
+<Route
+  path="/admin/users"
+  element={
+    <ProtectedRoute allowedRoles={["admin"]}>
+      <AdminUsers />
+    </ProtectedRoute>
+  }
+/>
+
+<Route
+  path="/admin/hotels"
+  element={
+    <ProtectedRoute allowedRoles={["admin"]}>
+      <AdminHotels />
+    </ProtectedRoute>
+  }
+/>
+
+<Route
+  path="/admin/audit-logs"
+  element={
+    <ProtectedRoute allowedRoles={["admin"]}>
+      <AdminAuditLogs />
+    </ProtectedRoute>
+  }
+/>
+
 
       <Route
         path="/admin/dashboard"

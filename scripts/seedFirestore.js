@@ -1,23 +1,35 @@
 /**
- * One-time Firestore seed script
- * Run with: node scripts/seedFirestore.js
+ * Firestore seed script (Admin SDK)
+ * Run with: node scripts/seedPhase7.js
+ *
+ * IMPORTANT:
+ * - serviceAccountKey.json must be in the SAME folder as this script: scripts/serviceAccountKey.json
+ * - This script uses firebase-admin (server/admin), not client Firestore SDK.
  */
 
 import admin from "firebase-admin";
 import { createRequire } from "module";
 
 const require = createRequire(import.meta.url);
+
+// ✅ Path is relative to THIS script file (scripts/)
 const serviceAccount = require("./serviceAccountKey.json");
 
-// Initialize Admin SDK
-admin.initializeApp({
-  credential: admin.credential.cert(serviceAccount),
-});
+// ---- Init Admin SDK (only initialize once) ----
+if (!admin.apps.length) {
+  admin.initializeApp({
+    credential: admin.credential.cert(serviceAccount),
+  });
+}
 
 const db = admin.firestore();
 
-async function seed() {
-  console.log("🌱 Seeding Firestore...");
+async function seedPhase7() {
+  console.log("🌱 Seeding Phase 7 data (Admin SDK)...");
+
+  // --------------------------------------------
+  // Example Phase 7 data (replace/extend as needed)
+  // --------------------------------------------
 
   // ---------- HOTELS ----------
   const hotels = [
@@ -50,14 +62,6 @@ async function seed() {
     },
   ];
 
-  for (const h of hotels) {
-    await db.collection("hotels").doc(h.id).set({
-      ...h,
-      createdAt: admin.firestore.FieldValue.serverTimestamp(),
-    });
-    console.log(`🏨 Hotel added: ${h.name}`);
-  }
-
   // ---------- ROOM TYPES ----------
   const roomTypes = [
     {
@@ -88,19 +92,58 @@ async function seed() {
     },
   ];
 
-  for (const rt of roomTypes) {
-    await db.collection("roomTypes").doc(rt.id).set({
-      ...rt,
-      createdAt: admin.firestore.FieldValue.serverTimestamp(),
-    });
-    console.log(`🛏️ Room type added: ${rt.name}`);
+  // --------------------------------------------
+  // Write helpers
+  // --------------------------------------------
+  const now = admin.firestore.FieldValue.serverTimestamp();
+
+  // If you want to fully overwrite docs every time, set MERGE to false.
+  // If you want to update/merge without deleting unknown fields, set MERGE to true.
+  const MERGE = true;
+
+  // Use a batch for fewer network calls (max 500 ops per batch)
+  const batch = db.batch();
+
+  // Hotels
+  for (const h of hotels) {
+    const ref = db.collection("hotels").doc(h.id);
+    batch.set(
+      ref,
+      {
+        ...h,
+        updatedAt: now,
+        createdAt: now, // if doc exists, merge mode won't overwrite createdAt unless you want it to
+      },
+      { merge: MERGE }
+    );
+    console.log(`🏨 queued hotel: ${h.name}`);
   }
 
-  console.log("✅ Firestore seeding complete!");
-  process.exit(0);
+  // Room Types
+  for (const rt of roomTypes) {
+    const ref = db.collection("roomTypes").doc(rt.id);
+    batch.set(
+      ref,
+      {
+        ...rt,
+        updatedAt: now,
+        createdAt: now,
+      },
+      { merge: MERGE }
+    );
+    console.log(`🛏️ queued room type: ${rt.name}`);
+  }
+
+  // Commit batch
+  await batch.commit();
+
+  console.log("✅ Phase 7 seeding complete!");
 }
 
-seed().catch((err) => {
-  console.error("❌ Seeding failed:", err);
-  process.exit(1);
-});
+// Run
+seedPhase7()
+  .then(() => process.exit(0))
+  .catch((err) => {
+    console.error("❌ Seeding failed:", err);
+    process.exit(1);
+  });
