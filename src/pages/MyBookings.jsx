@@ -65,7 +65,7 @@ export default function MyBookings() {
     setSuccess("");
     setBusyId(b.id);
     try {
-      await cancelBooking({ bookingId: b.id, userId: currentUser.uid });
+      await cancelBooking({ bookingId: b.id, userId: currentUser.uid, hotelId: b.hotelId });
       setSuccess("Booking cancelled.");
       await loadBookings();
     } catch {
@@ -102,10 +102,12 @@ export default function MyBookings() {
       await modifyBookingDates({
         bookingId: b.id,
         userId: currentUser.uid,
+        hotelId: b.hotelId,
         checkIn: ci,
         checkOut: co,
         totalPrice,
-      });
+        });
+
 
       setSuccess("Booking updated.");
       await loadBookings();

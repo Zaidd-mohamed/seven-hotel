@@ -10,6 +10,11 @@ import StaffDashboard from "../pages/StaffDashboard";
 import AdminDashboard from "../pages/AdminDashboard";
 import ProtectedRoute from "./ProtectedRoute";
 import MyBookings from "../pages/MyBookings";
+import Notifications from "../pages/Notifications";
+import GuestRequests from "../pages/GuestRequests";
+import StaffRequests from "../pages/StaffRequests";
+
+
 
 
 export default function AppRouter() {
@@ -39,6 +44,15 @@ export default function AppRouter() {
         }
       />
       <Route
+  path="/guest/notifications"
+  element={
+    <ProtectedRoute allowedRoles={["guest"]}>
+      <Notifications />
+    </ProtectedRoute>
+  }
+/>
+
+      <Route
         path="/admin/dashboard"
         element={
           <ProtectedRoute allowedRoles={["admin"]}>
@@ -54,6 +68,41 @@ export default function AppRouter() {
             </ProtectedRoute>
         }
         />
+
+        <Route
+        path="/guest/requests"
+        element={
+            <ProtectedRoute allowedRoles={["guest"]}>
+            <GuestRequests />
+            </ProtectedRoute>
+        }
+        />
+
+        <Route
+        path="/staff/requests"
+        element={
+            <ProtectedRoute allowedRoles={["receptionist", "housekeeping"]}>
+            <StaffRequests />
+            </ProtectedRoute>
+        }
+        />
+        <Route
+            path="/staff/reception/dashboard"
+            element={
+                <ProtectedRoute allowedRoles={["receptionist"]}>
+                <ReceptionDashboard />
+                </ProtectedRoute>
+            }
+            />
+
+            <Route
+            path="/staff/housekeeping/dashboard"
+            element={
+                <ProtectedRoute allowedRoles={["housekeeping"]}>
+                <HousekeepingDashboard />
+                </ProtectedRoute>
+            }
+            />
 
 
       <Route path="*" element={<Home />} />

@@ -1,0 +1,52 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    match /users/{uid} {
+      allow read, write: if request.auth != null && request.auth.uid == uid;
+    }
+
+    match /hotels/{id} {
+      allow read: if true;
+      allow write: if false;
+    }
+
+    match /roomTypes/{id} {
+      allow read: if true;
+      allow write: if false;
+    }
+
+    match /rooms/{id} {
+      allow read, write: if false;
+    }
+
+    // Private bookings: owner only
+    match /bookings/{bookingId} {
+      allow create: if request.auth != null
+        && request.resource.data.userId == request.auth.uid;
+
+      allow read, update: if request.auth != null
+        && resource.data.userId == request.auth.uid;
+
+      allow delete: if false;
+    }
+
+    // Public availability blocks (NO PII)
+    match /bookingBlocks/{blockId} {
+      allow read: if true;
+
+      // allow logged-in users to create blocks
+      allow create: if request.auth != null;
+
+      // allow updates only if logged in (Phase 4 basic)
+      // (Later Phase 5 will lock this down with Cloud Functions)
+      allow update: if request.auth != null;
+
+      allow delete: if false;
+    }
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

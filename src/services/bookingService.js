@@ -86,7 +86,7 @@ export async function fetchMyBookings(userId) {
   return items;
 }
 
-export async function cancelBooking({ bookingId, userId }) {
+export async function cancelBooking({ bookingId, userId, hotelId }) {
   // update private booking
   await updateDoc(doc(db, "bookings", bookingId), {
     status: "CANCELLED",
@@ -104,10 +104,39 @@ export async function cancelBooking({ bookingId, userId }) {
       updatedAt: serverTimestamp(),
     });
   }
+
+  // audit log
+  await addDoc(collection(db, "auditLogs"), {
+    actorUid: userId,
+    action: "CANCEL_BOOKING",
+    targetType: "booking",
+    targetId: bookingId,
+    timestamp: serverTimestamp(),
+    metadata: { hotelId: hotelId || null },
+  });
+
+  // notification
+  await addDoc(collection(db, "notifications"), {
+    userId,
+    hotelId: hotelId || null,
+    title: "Booking Cancelled",
+    message: "Your booking has been cancelled.",
+    type: "BOOKING_CANCELLED",
+    status: "UNREAD",
+    createdAt: serverTimestamp(),
+  });
 }
 
 
-export async function modifyBookingDates({ bookingId, userId, checkIn, checkOut, totalPrice }) {
+
+export async function modifyBookingDates({
+  bookingId,
+  userId,
+  hotelId,
+  checkIn,
+  checkOut,
+  totalPrice,
+}) {
   await updateDoc(doc(db, "bookings", bookingId), {
     checkIn,
     checkOut,
@@ -126,5 +155,25 @@ export async function modifyBookingDates({ bookingId, userId, checkIn, checkOut,
       updatedAt: serverTimestamp(),
     });
   }
+
+  await addDoc(collection(db, "auditLogs"), {
+    actorUid: userId,
+    action: "MODIFY_BOOKING",
+    targetType: "booking",
+    targetId: bookingId,
+    timestamp: serverTimestamp(),
+    metadata: { hotelId: hotelId || null },
+  });
+
+  await addDoc(collection(db, "notifications"), {
+    userId,
+    hotelId: hotelId || null,
+    title: "Booking Updated",
+    message: "Your booking dates were updated.",
+    type: "BOOKING_UPDATED",
+    status: "UNREAD",
+    createdAt: serverTimestamp(),
+  });
 }
+
 
