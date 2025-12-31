@@ -9,6 +9,8 @@ import GuestDashboard from "../pages/GuestDashboard";
 import StaffDashboard from "../pages/StaffDashboard";
 import AdminDashboard from "../pages/AdminDashboard";
 import ProtectedRoute from "./ProtectedRoute";
+import MyBookings from "../pages/MyBookings";
+
 
 export default function AppRouter() {
   return (
@@ -44,6 +46,15 @@ export default function AppRouter() {
           </ProtectedRoute>
         }
       />
+      <Route
+        path="/guest/bookings"
+        element={
+            <ProtectedRoute allowedRoles={["guest"]}>
+            <MyBookings />
+            </ProtectedRoute>
+        }
+        />
+
 
       <Route path="*" element={<Home />} />
     </Routes>
