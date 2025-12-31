@@ -1,41 +1,32 @@
+import { useEffect, useState } from "react";
 import SectionTitle from "../components/SectionTitle";
 import RoomCard from "../components/RoomCard";
+import { useHotel } from "../context/HotelContext";
+import { fetchRoomTypesByHotel } from "../services/roomTypeService";
 
 export default function Rooms() {
-  const rooms = [
-    {
-      id: "ocean-suite",
-      name: "Ocean Suite",
-      price: 220,
-      summary: "Wide ocean views, calm textures, and a private balcony.",
-      image:
-        "https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?auto=format&fit=crop&w=1600&q=80",
-    },
-    {
-      id: "garden-villa",
-      name: "Garden Villa",
-      price: 310,
-      summary: "A secluded villa with minimal interiors and soft lighting.",
-      image:
-        "https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=1600&q=80",
-    },
-    {
-      id: "hill-country-retreat",
-      name: "Hill Country Retreat",
-      price: 280,
-      summary: "Fresh air, warm wood finishes, and quiet mornings.",
-      image:
-        "https://images.unsplash.com/photo-1445019980597-93fa8acb246c?auto=format&fit=crop&w=1600&q=80",
-    },
-    {
-      id: "city-signature",
-      name: "City Signature",
-      price: 190,
-      summary: "Modern luxury in the heart of Colombo — minimal and refined.",
-      image:
-        "https://images.unsplash.com/photo-1551887373-6a0a1f8d59cc?auto=format&fit=crop&w=1600&q=80",
-    },
-  ];
+  const { selectedHotelId, selectedHotel, loadingHotels } = useHotel();
+
+  const [roomTypes, setRoomTypes] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    async function load() {
+      if (!selectedHotelId) return;
+      setLoading(true);
+      setError("");
+      try {
+        const list = await fetchRoomTypesByHotel(selectedHotelId);
+        setRoomTypes(list);
+      } catch (e) {
+        setError("Failed to load room types.");
+      } finally {
+        setLoading(false);
+      }
+    }
+    load();
+  }, [selectedHotelId]);
 
   return (
     <div className="pt-24 pb-16 sm:pb-20">
@@ -43,14 +34,42 @@ export default function Rooms() {
         <SectionTitle
           eyebrow="Seven"
           title="Rooms & Suites"
-          subtitle="Explore our signature rooms — designed for calm, comfort, and effortless elegance."
+          subtitle={
+            selectedHotel
+              ? `Now showing: ${selectedHotel.name}`
+              : "Select a hotel to view rooms."
+          }
         />
 
-        <div className="mt-10 grid grid-cols-1 md:grid-cols-2 gap-6">
-          {rooms.map((r) => (
-            <RoomCard key={r.id} room={r} />
-          ))}
-        </div>
+        {(loadingHotels || loading) && (
+          <div className="mt-10 grid grid-cols-1 md:grid-cols-2 gap-6">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <div key={i} className="card-luxe p-6 text-white/60">
+                Loading...
+              </div>
+            ))}
+          </div>
+        )}
+
+        {error && (
+          <div className="mt-10 rounded-xl border border-red-500/30 bg-red-500/10 p-4 text-sm text-red-200">
+            {error}
+          </div>
+        )}
+
+        {!loading && !error && !loadingHotels && roomTypes.length === 0 && (
+          <div className="mt-10 card-luxe p-8 text-white/70">
+            No rooms available for this hotel yet.
+          </div>
+        )}
+
+        {!loading && !error && roomTypes.length > 0 && (
+          <div className="mt-10 grid grid-cols-1 md:grid-cols-2 gap-6">
+            {roomTypes.map((rt) => (
+              <RoomCard key={rt.id} roomType={rt} />
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );
